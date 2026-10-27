@@ -4,63 +4,40 @@
 
 #include "AudioEngine.h"
 #include "BankModel.h"
-#include "PadEditor.h"
-#include "PadGrid.h"
+#include "KitPage.h"
+#include "SamplerPage.h"
+#include "SoundLibrary.h"
 
+// The window: a header with the two pages, Sampler (record, edit, effects, chop) and Kits
+// (pads and export to the MPC).
 class MainComponent : public juce::Component,
-                      private juce::ChangeListener,
-                      private juce::ListBoxModel
+                      public juce::DragAndDropContainer
 {
 public:
     MainComponent();
-    ~MainComponent() override;
 
-    // Opens an MPC program and the sounds next to it as a kit.
     void openKitFile (const juce::File& pgm);
+    // Opens an audio file in the sampler.
+    void openAudioFile (const juce::File&);
 
     void paint (juce::Graphics&) override;
     void resized() override;
 
 private:
-    void changeListenerCallback (juce::ChangeBroadcaster*) override;
-
-    int getNumRows() override;
-    void paintListBoxItem (int row, juce::Graphics&, int width, int height, bool selected) override;
-    void selectedRowsChanged (int row) override;
-
-    void selectPad (int pad);
-    void loadFilesIntoPads (int firstPad, const juce::Array<juce::File>& files);
-    void chooseFileForPad();
-    void openKit();
-    void exportToCard();
-    void writeBanks (const juce::File& destination);
+    void showPage (int index);
     void showAudioSettings();
-    void refresh();
-    void setStatus (const juce::String& text, bool warning = false);
 
+    juce::AudioFormatManager formats;
     Project project;
     AudioEngine engine;
-    juce::AudioFormatManager formats;
+    SoundLibrary library;
 
     juce::Label appTitle { {}, "MPC Bank Builder" };
-    juce::Label kitLabel { {}, "Kit name" };
-    juce::TextEditor kitName;
-    juce::Label memory;
-    juce::ComboBox ram;
-    juce::TextButton openButton { "Open kit..." };
+    juce::TextButton samplerTab { "Sampler" }, kitsTab { "Kits" };
     juce::TextButton audioButton { "Audio/MIDI..." };
-    juce::TextButton exportButton { "Export to card..." };
 
-    juce::ListBox kitList { "Kits", this };
-    juce::TextButton newKit { "New kit" };
-    juce::TextButton removeKit { "Remove" };
-
-    std::array<juce::TextButton, 4> bankTabs;
-    PadGrid grid { project };
-    PadEditor editor { project };
-    juce::Label status;
-
-    std::unique_ptr<juce::FileChooser> chooser;
+    KitPage kits;
+    SamplerPage sampler;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainComponent)
 };

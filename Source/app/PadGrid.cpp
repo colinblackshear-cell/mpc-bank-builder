@@ -1,5 +1,6 @@
 #include "PadGrid.h"
 
+#include "SoundLibrary.h"
 #include "Theme.h"
 
 PadGrid::PadGrid (Project& p) : project (p) {}
@@ -200,4 +201,15 @@ void PadGrid::filesDropped (const juce::StringArray& files, int x, int y)
     if (onFilesDropped)
         onFilesDropped (pad, files);
     repaint();
+}
+
+bool PadGrid::isInterestedInDragSource (const SourceDetails& d)
+{
+    return d.description.toString().startsWith (SoundLibrary::dragPrefix);
+}
+
+void PadGrid::itemDropped (const SourceDetails& d)
+{
+    const auto path = d.description.toString().fromFirstOccurrenceOf (SoundLibrary::dragPrefix, false, false);
+    filesDropped ({ path }, d.localPosition.x, d.localPosition.y);
 }

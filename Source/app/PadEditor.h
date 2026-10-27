@@ -33,6 +33,13 @@ private:
     juce::Label volumeLabel { {}, "Volume" }, panLabel { {}, "Pan" }, tuneLabel { {}, "Tune" }, modeLabel { {}, "Plays" };
     juce::Slider volume, pan, tune;
     juce::ComboBox mode;
+    juce::Label timingLabel { {}, "Length" };
+    juce::ComboBox timing;
+    juce::Label timingInfo;
+
+    static constexpr int kTimingAuto = 1, kTimingNormal = 2, kTimingBeats = 10;
+    static constexpr std::array<double, 9> kBeatChoices { 0.25, 0.5, 1, 2, 4, 8, 16, 32, 64 };
+    static juce::String beatsText (double beats);
     juce::ToggleButton mono { "Save as mono (half the memory)" };
     juce::ToggleButton reverse { "Reverse" };
     juce::ToggleButton normalize { "Normalize" };

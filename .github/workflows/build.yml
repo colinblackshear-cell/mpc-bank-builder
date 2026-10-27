@@ -1,0 +1,66 @@
+name: Build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  mac:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+
+      # Programs and sounds saved by an MPC2000XL, from the vMPC2000XL emulator's demo kits.
+      # The format tests read and rewrite each one byte for byte.
+      - name: Get real MPC files for the tests
+        run: |
+          mkdir fixtures && cd fixtures
+          git init -q
+          git remote add origin https://github.com/izzyreal/mpc.git
+          git sparse-checkout set resources/demodata
+          git fetch -q --depth 1 --filter=blob:none origin 615418ff54c104a5f37cc31880ecf1dd6d76c0c7
+          git checkout -q FETCH_HEAD
+
+      - name: Configure
+        run: cmake -S . -B build -G Xcode -DCMAKE_OSX_ARCHITECTURES="arm64;x86_64"
+
+      - name: Build
+        run: cmake --build build --config Release -- -quiet
+
+      - name: Run tests
+        env:
+          MPC_FIXTURES: ${{ github.workspace }}/fixtures/resources/demodata
+        run: ctest --test-dir build -C Release --output-on-failure
+
+      - name: Sign for local use
+        run: codesign --force --deep -s - "build/MpcBankBuilder_artefacts/Release/MPC Bank Builder.app"
+
+      - name: Package
+        run: |
+          mkdir -p dist
+          ditto -c -k --keepParent "build/MpcBankBuilder_artefacts/Release/MPC Bank Builder.app" dist/MPC-Bank-Builder.zip
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: MPC-Bank-Builder-mac
+          path: dist/*.zip
+
+  # Quick check of the file formats on Linux, without JUCE.
+  format-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Get real MPC files for the tests
+        run: |
+          mkdir fixtures && cd fixtures
+          git init -q
+          git remote add origin https://github.com/izzyreal/mpc.git
+          git sparse-checkout set resources/demodata
+          git fetch -q --depth 1 --filter=blob:none origin 615418ff54c104a5f37cc31880ecf1dd6d76c0c7
+          git checkout -q FETCH_HEAD
+      - run: cmake -S . -B build -DMPC_TESTS_ONLY=ON && cmake --build build
+      - env:
+          MPC_FIXTURES: ${{ github.workspace }}/fixtures/resources/demodata
+        run: ctest --test-dir build --output-on-failure

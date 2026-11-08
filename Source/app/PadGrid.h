@@ -7,7 +7,8 @@
 // The 4x4 pads of one MPC bank (A-D), laid out like the MPC: pad 13 top left, pad 1 bottom left.
 // Drop audio files or a folder on a pad to fill it and the pads after it.
 class PadGrid : public juce::Component,
-                public juce::FileDragAndDropTarget
+                public juce::FileDragAndDropTarget,
+                public juce::DragAndDropTarget
 {
 public:
     explicit PadGrid (Project&);
@@ -35,6 +36,12 @@ public:
     void fileDragMove (const juce::StringArray&, int x, int y) override;
     void fileDragExit (const juce::StringArray&) override;
     void filesDropped (const juce::StringArray& files, int x, int y) override;
+
+    // Sounds dragged from the library list.
+    bool isInterestedInDragSource (const SourceDetails&) override;
+    void itemDragMove (const SourceDetails& d) override { fileDragMove ({}, d.localPosition.x, d.localPosition.y); }
+    void itemDragExit (const SourceDetails&) override { fileDragExit ({}); }
+    void itemDropped (const SourceDetails&) override;
 
 private:
     juce::Rectangle<int> boundsForSlot (int slot) const;   // slot 0..15 within the bank

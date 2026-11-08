@@ -20,7 +20,8 @@ namespace SampleTools
     SharedAudio resample (const juce::AudioBuffer<float>&, double sourceRate);
 
     // The pad as it will sound on the MPC: reverse, normalize and mono applied, 16 bits.
-    mpc::Sound renderPad (const Pad&);
+    // `audio` replaces the pad's own audio, e.g. with its tempo-fitted version.
+    mpc::Sound renderPad (const Pad&, SharedAudio audio = nullptr);
     SharedAudio fromSound (const mpc::Sound&);
 
     mpc::Bank toMpcBank (const Bank&);

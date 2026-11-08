@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.22)
+cmake_minimum_required(VERSION 3.24)
 
 project(MpcBankBuilder VERSION 0.1.0 LANGUAGES C CXX)
 
@@ -30,13 +30,25 @@ FetchContent_Declare(JUCE
     GIT_SHALLOW ON)
 FetchContent_MakeAvailable(JUCE)
 
+# Time-stretching and pitch-shifting (MIT licence).
+FetchContent_Declare(signalsmith-stretch
+    GIT_REPOSITORY https://github.com/Signalsmith-Audio/signalsmith-stretch.git
+    GIT_TAG 1.4.0
+    GIT_SHALLOW ON)
+FetchContent_MakeAvailable(signalsmith-stretch)
+
 set(APP_SOURCES
     Source/app/AudioEngine.cpp
     Source/app/BankModel.cpp
+    Source/app/KitPage.cpp
     Source/app/MainComponent.cpp
     Source/app/PadEditor.cpp
     Source/app/PadGrid.cpp
-    Source/app/SampleTools.cpp)
+    Source/app/SampleTools.cpp
+    Source/app/SamplerPage.cpp
+    Source/app/SoundFx.cpp
+    Source/app/SoundLibrary.cpp
+    Source/app/WaveEditor.cpp)
 
 juce_add_gui_app(MpcBankBuilder
     COMPANY_NAME "Colin Blackshear"
@@ -59,6 +71,7 @@ target_compile_definitions(MpcBankBuilder PRIVATE ${APP_DEFINITIONS})
 target_link_libraries(MpcBankBuilder
     PRIVATE
         mpc_files
+        signalsmith-stretch
         juce::juce_audio_utils
         juce::juce_dsp
     PUBLIC
@@ -77,6 +90,7 @@ target_compile_definitions(AppTests PRIVATE
     JUCE_APPLICATION_VERSION_STRING="0.1.0")
 target_link_libraries(AppTests PRIVATE
     mpc_files
+    signalsmith-stretch
     juce::juce_audio_utils
     juce::juce_dsp
     juce::juce_recommended_config_flags

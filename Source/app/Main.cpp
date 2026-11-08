@@ -25,7 +25,7 @@ public:
         anotherInstanceStarted (commandLine);
     }
 
-    // A .PGM opened with the app (or passed on the command line) opens as a kit.
+    // Files opened with the app (or passed on the command line).
     void anotherInstanceStarted (const juce::String& commandLine) override
     {
         if (mainWindow == nullptr)
@@ -34,9 +34,15 @@ public:
         for (const auto& arg : juce::StringArray::fromTokens (commandLine, true))
         {
             const juce::File file (arg.unquoted());
-            if (file.hasFileExtension ("pgm") && file.existsAsFile())
-                if (auto* main = dynamic_cast<MainComponent*> (mainWindow->getContentComponent()))
-                    main->openKitFile (file);
+            auto* main = dynamic_cast<MainComponent*> (mainWindow->getContentComponent());
+            if (main == nullptr || ! file.existsAsFile())
+                continue;
+
+            // A .PGM opens as a kit; any other sound opens in the sampler.
+            if (file.hasFileExtension ("pgm"))
+                main->openKitFile (file);
+            else
+                main->openAudioFile (file);
         }
     }
 

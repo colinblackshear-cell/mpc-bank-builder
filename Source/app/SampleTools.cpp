@@ -169,15 +169,18 @@ juce::Array<juce::File> expandDroppedFiles (const juce::StringArray& paths, juce
     return result;
 }
 
-mpc::Sound renderPad (const Pad& pad)
+mpc::Sound renderPad (const Pad& pad, SharedAudio source)
 {
     mpc::Sound sound;
     sound.name = pad.name.toStdString();
 
-    if (pad.isEmpty())
+    if (source == nullptr)
+        source = pad.audio;
+
+    if (pad.isEmpty() || source == nullptr)
         return sound;
 
-    const auto& audio = *pad.audio;
+    const auto& audio = *source;
     const int n = audio.getNumSamples();
     const int channels = pad.channelsOnMpc();
 
@@ -232,7 +235,10 @@ mpc::Bank toMpcBank (const Bank& bank)
 
         mpc::BankPad p;
         p.pad = i;
-        p.sound = renderPad (pad);
+        p.sound = renderPad (pad, bank.audioToPlay (i));
+        // The MPC shows a sound's length in beats and uses it to work out its tempo.
+        if (const auto beats = bank.beatsFor (i); beats >= 1)
+            p.sound.beatCount = (uint8_t) juce::jlimit (1, 32, (int) std::round (beats));
         p.volume = (uint8_t) juce::jlimit (0, 100, pad.volume);
         p.pan = (uint8_t) juce::jlimit (0, 100, pad.pan);
         p.tune = (int16_t) juce::jlimit (-120, 120, pad.tune);
